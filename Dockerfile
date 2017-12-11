@@ -42,8 +42,8 @@ RUN \
 # Install Node
 RUN \
     apt-get update && \
-    apt-get install nodejs && \
-    apt-get install npm
+    apt-get install -y nodejs npm && \
+    apt-get autoclean && apt-get clean && apt-get autoremove
 
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --filename=composer --install-dir=/usr/bin

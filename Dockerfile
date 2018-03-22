@@ -1,28 +1,34 @@
-FROM debian:jessie
+FROM ubuntu:16.04
 
-# With inspiration from https://github.com/punkstar/bitbucket-pipelines-php7-mysql
+RUN export LC_ALL=C.UTF-8
+RUN DEBIAN_FRONTEND=noninteractive
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
-MAINTAINER Alex Porter <me@alexjohnporter.me>
+RUN apt-get update
+RUN apt-get install -y \
+    sudo \
+    autoconf \
+    autogen \
+    language-pack-en-base \
+    wget \
+    curl \
+    rsync \
+    ssh \
+    openssh-client \
+    git \
+    build-essential \
+    apt-utils \
+    software-properties-common \
+    python-software-properties \
+    nasm \
+    libjpeg-dev \
+    libpng-dev
 
-ENV DEBIAN_FRONTEND noninteractive
-ENV LC_ALL en_US.UTF-8
-ENV LANGUAGE en_US:en
+RUN useradd -m docker && echo "docker:docker" | chpasswd && adduser docker sudo    
 
-# Base
-RUN \
- apt-get update && \
- apt-get -y --no-install-recommends install locales apt-utils curl ca-certificates && \
- echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
- locale-gen en_US.UTF-8 && \
- /usr/sbin/update-locale LANG=en_US.UTF-8 && \
- update-ca-certificates && \
- apt-get autoclean && apt-get clean && apt-get autoremove
-
-# Add the PHP 7 repo
-RUN \
-  echo "deb http://packages.dotdeb.org jessie all" >> /etc/apt/sources.list && \
-  echo "deb-src http://packages.dotdeb.org jessie all" >> /etc/apt/sources.list && \
-  curl https://www.dotdeb.org/dotdeb.gpg | apt-key add -
+RUN wget -q -O /tmp/libpng12.deb http://mirrors.kernel.org/ubuntu/pool/main/libp/libpng/libpng12-0_1.2.54-1ubuntu1_amd64.deb \
+  && dpkg -i /tmp/libpng12.deb \
+  && rm /tmp/libpng12.deb    
 
 # Install MySQL
 RUN \
@@ -31,26 +37,56 @@ RUN \
   echo "mysql-server mysql-server/root_password_again password root" | debconf-set-selections && \
   apt-get install -y mysql-server mysql-client && \
   apt-get autoclean && apt-get clean && apt-get autoremove
+# PHP
+RUN LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php && apt-get update && apt-get install -y php7.1
+RUN apt-get install -y \
+    git &&\
+    zip &&\
+    php7.1-curl \
+    php7.1-gd \
+    php7.1-dev \
+    php7.1-xml \
+    php7.1-bcmath \
+    php7.1-mysql \
+    php7.1-mbstring \
+    php7.1-zip \
+    php7.1-sqlite \
+    php7.1-soap \
+    php7.1-json \
+    php7.1-intl \
+    php7.1-imap \
+    php-xdebug \
+    php-memcached
+RUN command -v php
 
-# Install PHP
-RUN \
-  apt-get update && \
-  apt-get install -y git zip && \
-  apt-get install -y php7.0-mysqlnd php7.0-cli php7.0-sqlite php7.0-mbstring php7.0-mcrypt php7.0-curl php7.0-intl php7.0-gd php7.0-xdebug php7.0-zip php7.0-xml && \
-  apt-get autoclean && apt-get clean && apt-get autoremove
+# Composer
+RUN curl -sS https://getcomposer.org/installer | php
+RUN mv composer.phar /usr/local/bin/composer && \
+    chmod +x /usr/local/bin/composer && \
+    composer self-update --preview
+RUN command -v composer
 
-# Install Node
-RUN \
-    apt-get update && \
-    apt-get install -y nodejs npm && \
-    npm cache clean -f && \
-    npm install -g n && \
-    n stable && \
-    ln -s `which nodejs` /usr/bin/node && \
-    apt-get autoclean && apt-get clean && apt-get autoremove
+# PHPUnit
+RUN wget https://phar.phpunit.de/phpunit.phar
+RUN chmod +x phpunit.phar
+RUN mv phpunit.phar /usr/local/bin/phpunit
+RUN command -v phpunit
 
-# Install composer
-RUN curl -sS https://getcomposer.org/installer | php -- --filename=composer --install-dir=/usr/bin
+# Node.js
+RUN curl -sL https://deb.nodesource.com/setup_9.x -o nodesource_setup.sh
+RUN bash nodesource_setup.sh
+RUN apt-get install nodejs -y
+RUN npm install npm@5.6.0 -g
+RUN command -v node
+RUN command -v npm
 
-# Install PHPUnit
-RUN curl https://phar.phpunit.de/phpunit.phar > phpunit.phar && chmod +x phpunit.phar && mv phpunit.phar /usr/local/bin/phpunit
+# Other
+RUN mkdir ~/.ssh
+RUN touch ~/.ssh_config
+
+# Display versions installed
+RUN php -v
+RUN composer --version
+RUN phpunit --version
+RUN node -v
+RUN npm -v

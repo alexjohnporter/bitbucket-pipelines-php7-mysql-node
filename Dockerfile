@@ -5,7 +5,7 @@ RUN DEBIAN_FRONTEND=noninteractive
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 RUN apt-get update
-RUN apt-get install -y \
+RUN apt-get install -yf \
     sudo \
     autoconf \
     autogen \
@@ -35,13 +35,13 @@ RUN \
   apt-get update && \
   echo "mysql-server mysql-server/root_password password root" | debconf-set-selections && \
   echo "mysql-server mysql-server/root_password_again password root" | debconf-set-selections && \
-  apt-get install -y mysql-server mysql-client && \
+  apt-get install -y -f libapparmor-perl libpng12-0 libaio1 libnuma1 mysql-client-core-5.7 mysql-common apparmor psmisc libevent-core-2.0-5 && \
+  apt-get install -y mysql-server-5.7 mysql-client-5.7 && \
   apt-get autoclean && apt-get clean && apt-get autoremove
 # PHP
-RUN LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php && apt-get update && apt-get install -y php7.2
-RUN apt-get install -y \
-    git &&\
-    zip &&\
+RUN LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php && apt-get update && apt-get install -y zip git php7.2
+RUN apt-get update -y &&\
+    apt-get install -y \
     php7.2-curl \
     php7.2-gd \
     php7.2-dev \

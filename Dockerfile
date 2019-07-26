@@ -73,10 +73,10 @@ RUN mv phpunit.phar /usr/local/bin/phpunit
 RUN command -v phpunit
 
 # Node.js
-RUN curl -sL https://deb.nodesource.com/setup_9.x -o nodesource_setup.sh
+RUN curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh
 RUN bash nodesource_setup.sh
 RUN apt-get install nodejs -y
-RUN npm install npm@5.6.0 -g
+RUN npm install npm@6.10 -g
 RUN command -v node
 RUN command -v npm
 
